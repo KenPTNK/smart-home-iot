@@ -118,7 +118,16 @@ namespace SmartHomeIoTFinalVersion
 
         private async void timer1_Tick(object sender, EventArgs e)
         {
-            await read_data();
+            // Pause while a read is in flight so slow requests (or an error dialog) don't pile up
+            timer1.Stop();
+            try
+            {
+                await read_data();
+            }
+            finally
+            {
+                timer1.Start();
+            }
         }
 
         private async Task SendData(string path, string value)

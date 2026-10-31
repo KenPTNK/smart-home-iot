@@ -17,7 +17,7 @@ readings to Firebase and drives the relays is not included.
 | Step | Code (`SmartHomeIoTFinalVersion/Form1.cs`) |
 |---|---|
 | Connect | `GET` the database URL to check it is reachable |
-| Read | A timer calls `read_data()`, which fetches `<url>.json` and shows `Sensors/Temperature`, `Sensors/Humidity`, `Device/Aircon_Status` and `Device/Light_Status` |
+| Read | Every 2 s a timer calls `read_data()` (paused while a request is in flight), which fetches `<url>.json` and shows `Sensors/Temperature`, `Sensors/Humidity`, `Device/Aircon_Status` and `Device/Light_Status` |
 | Control | The on/off buttons only appear while a device reports `Online`; pressing one sends `PUT <url>/Device/<name>.json` with `"ON"` or `"OFF"` |
 
 Firebase is called through its REST API with `HttpClient` and parsed with Newtonsoft.Json.
