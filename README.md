@@ -1,33 +1,45 @@
 # Smart Home IoT
 
-Ứng dụng Windows Forms (C# / .NET Framework) giám sát và điều khiển nhà thông minh qua **Firebase Realtime Database**: đọc nhiệt độ, độ ẩm và bật/tắt thiết bị (đèn, điều hoà...).
+A Windows desktop app that monitors and controls a smart home through **Firebase Realtime Database**:
+it shows live temperature and humidity and switches the light and air conditioner on or off.
 
-## Cấu trúc
+```
+sensors / relays ──► Firebase Realtime Database ◄──► this app (C# WinForms)
+                       Sensors/{Temperature,Humidity}     polls readings, shows device status,
+                       Device/{Light,Airconditional}      writes ON/OFF commands
+```
 
-| Thư mục | Mô tả |
+This repository holds the desktop control app. The microcontroller firmware that writes sensor
+readings to Firebase and drives the relays is not included.
+
+## How it works
+
+| Step | Code (`SmartHomeIoTFinalVersion/Form1.cs`) |
 |---|---|
-| `SmartHomeIoT/` | Bản chính – mở bằng `SmartHomeIoT.sln` ở thư mục gốc |
-| `SmartHome_final/` | Bản hoàn thiện, kết nối Firebase (Newtonsoft.Json) |
-| `Smart_Home_IOT_Final_Version/` | Một phiên bản final khác |
-| `firebase_connection/` | Demo đọc/ghi Firebase qua REST API |
-| `WindowsFormsApplication_Iot_HMI/` | Giao diện HMI có màn hình đăng nhập |
-| `SmartHome/`, `Buổi 2/`, `WindowsFormsApplication1/`, `WindowsFormsApplication2/` | Bài thực hành theo buổi |
+| Connect | `GET` the database URL to check it is reachable |
+| Read | A timer calls `read_data()`, which fetches `<url>.json` and shows `Sensors/Temperature`, `Sensors/Humidity`, `Device/Aircon_Status` and `Device/Light_Status` |
+| Control | The on/off buttons only appear while a device reports `Online`; pressing one sends `PUT <url>/Device/<name>.json` with `"ON"` or `"OFF"` |
 
-## Yêu cầu
+Firebase is called through its REST API with `HttpClient` and parsed with Newtonsoft.Json.
 
-- Windows + Visual Studio 2015 trở lên (workload **.NET desktop development**)
-- .NET Framework 4.0 / 4.5.2 Developer Pack
+## Run
 
-## Chạy dự án
+Requirements: Windows, Visual Studio 2015 or later (**.NET desktop development** workload),
+.NET Framework 4.5.2 Developer Pack.
 
-1. Clone repo:
-   ```bash
-   git clone https://github.com/KenPTNK/smart-home-iot.git
-   ```
-2. Mở file `.sln` của project muốn chạy bằng Visual Studio.
-3. Chuột phải Solution → **Restore NuGet Packages** (thư mục `packages/` không được commit).
-4. Nhấn **F5**.
+1. Open `SmartHomeIoT.sln`.
+2. Right-click the solution → **Restore NuGet Packages**.
+3. Press **F5**, enter your database URL (ending in `/`), then **Connect** and **Read**.
 
-## Firebase
+## Database layout
 
-URL Realtime Database đang ghi trực tiếp trong code (`firebase_connection/firebase_connection/Form1.cs`). Để dùng database của bạn, thay URL đó và cấu hình **Rules** trên Firebase Console để không cho ghi công khai.
+```json
+{
+  "Sensors": { "Temperature": 30, "Humidity": 70 },
+  "Device":  { "Light": "OFF", "Airconditional": "OFF",
+               "Light_Status": "Online", "Aircon_Status": "Online" }
+}
+```
+
+The app sends no authentication, so the database rules decide who can read and write. Never leave
+a database that controls real devices open to public writes.
